@@ -16,22 +16,23 @@ from aiohttp import web
 from ..modules.bilibili_apis import BilibiliApis
 from ..modules.bilibili_api_host import get_app
 from ..modules.browser_adapter import BrowserMode
+from ..config import config
 
 driver = get_driver()
-config = driver.config
-whitelist = [str(i) for i in getattr(config, "analysis_whitelist", [])]
-group_whitelist = [str(i) for i in getattr(config, "analysis_group_whitelist", [])]
-blacklist = [str(i) for i in getattr(config, "analysis_blacklist", [])]
-group_blacklist = [str(i) for i in getattr(config, "analysis_group_blacklist", [])]
-link_blacklist = [str(i) for i in getattr(config, "analysis_link_blacklist", [])]
 
-bili_helper_tmp_dir= getattr(config, "bili_helper_tmp_dir", "./data/bili_helper_tmp")
+whitelist = config.analysis_whitelist
+group_whitelist = config.analysis_group_whitelist
+blacklist = config.analysis_blacklist
+group_blacklist = config.analysis_group_blacklist
+link_blacklist = config.analysis_link_blacklist
+
+bili_helper_tmp_dir= config.bili_helper_tmp_dir
 
 if os.path.exists(bili_helper_tmp_dir):
   shutil.rmtree(bili_helper_tmp_dir)
 os.makedirs(bili_helper_tmp_dir, exist_ok=True)
 
-cookie_store_path = getattr(config, "bili_helper_cookie_path", "./data/bili_helper_cookie.json")
+cookie_store_path = config.bili_helper_cookie_path
 def write_cookie(config: dict):
     try:
         with open(cookie_store_path, "w") as f:

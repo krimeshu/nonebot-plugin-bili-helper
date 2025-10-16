@@ -23,6 +23,8 @@ _✨ NoneBot 插件简单描述 ✨_
 
 这是一个 nonebot2 插件项目，支持对群聊内分享 B 站视频进行相关信息的解析与提取。
 
+> 评论模板来自: [https://github.com/ikenxuan/kkkkkk-10086](https://github.com/ikenxuan/kkkkkk-10086)
+
 <details open>
 <summary>折叠事项</summary>
 

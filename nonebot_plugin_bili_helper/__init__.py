@@ -1,5 +1,6 @@
 from nonebot.plugin import PluginMetadata, inherit_supported_adapters
 from nonebot import require
+require("nonebot_plugin_htmlrender")
 
 from .config import Config
 from .handlers import bili_helper

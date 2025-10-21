@@ -30,8 +30,6 @@ class BrowserAdapter:
         page = None
         try:
             if self.mode == BrowserMode.NONEBOT_HTMLRENDER:
-                from nonebot import require
-                require("nonebot_plugin_htmlrender")
                 from nonebot_plugin_htmlrender import get_new_page as htmlrender_get_page
                 async with htmlrender_get_page(**kwargs) as p:
                     yield p

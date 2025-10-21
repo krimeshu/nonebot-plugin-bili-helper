@@ -6,8 +6,7 @@ import requests
 import shutil
 # import threading
 from typing import Literal
-from nonebot import get_driver, logger, on_message, on_regex, require
-require("nonebot_plugin_htmlrender")
+from nonebot import get_driver, logger, on_message, on_regex
 from nonebot_plugin_htmlrender import get_new_page
 from nonebot.adapters.onebot.v11 import Event, Message, MessageSegment
 from nonebot.matcher import Matcher

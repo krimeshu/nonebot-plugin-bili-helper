@@ -1,8 +1,6 @@
 from nonebot.plugin import PluginMetadata, inherit_supported_adapters
 from nonebot import require
 
-require("nonebot_plugin_session")
-
 from .config import Config
 from .handlers import bili_helper
 
@@ -16,5 +14,4 @@ __plugin_meta__ = PluginMetadata(
     config=Config,
     homepage="https://github.com/krimeshu/nonebot-plugin-bili-helper",
     type="application",
-    supported_adapters=inherit_supported_adapters("nonebot_plugin_session")
 )

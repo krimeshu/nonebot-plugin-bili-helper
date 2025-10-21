@@ -24,7 +24,7 @@ whitelist = config.analysis_whitelist
 group_whitelist = config.analysis_group_whitelist
 blacklist = config.analysis_blacklist
 group_blacklist = config.analysis_group_blacklist
-link_blacklist = config.analysis_link_blacklist
+group_strategies = config.analysis_group_strategies
 
 bili_helper_tmp_dir= config.bili_helper_tmp_dir
 
@@ -174,6 +174,11 @@ async def handle_analysis(event: Event, matcher: Matcher) -> None:
     is_info_sent = False
     try:
         matcher.stop_propagation()
+        strategy = group_strategies.get(group_id, None)
+        def is_mode_allowed(m: str) -> bool:
+            if not strategy:
+                return True
+            return m in strategy
         # url = quote(bili_url)
         vids = bili_apis.get_id_from_url(bili_url)
         if not vids:
@@ -181,7 +186,7 @@ async def handle_analysis(event: Event, matcher: Matcher) -> None:
             return
         logger.debug(f"提取到的ID: {vids}")
         info = bili_apis.video_info_api(bvid=vids.get("bv")).call().get("data", {})
-        if "detail" in mode:
+        if is_mode_allowed("detail") and "detail" in mode:
             def number_readable(num: int) -> str:
                 if num >= 1_0000_0000: return f"{num / 1_0000_0000:.1f}亿"
                 elif num >= 1_0000: return f"{num / 1_0000:.1f}万"
@@ -238,12 +243,12 @@ async def handle_analysis(event: Event, matcher: Matcher) -> None:
                 msg_seg.append(MessageSegment.text(f"\nℹ️ {desc}"))
             await matcher.send(msg_seg)
             is_info_sent = True
-        if "link" in mode and not group_id in link_blacklist:
+        if is_mode_allowed("link") and "link" in mode:
             bvid = info.get("bvid", "")
             new_url = f"https://b23.tv/{bvid}" if bvid else bili_url
             await matcher.send(f"解析到B站链接: {new_url}")
             is_info_sent = True
-        if "comments" in mode:
+        if is_mode_allowed("comments") and "comments" in mode:
             tmp_name = f"{int(event.time)}_{event.get_session_id()}"
             # comments_html = requests.get(f"{bili_helper_host}/get-replies?url={url}", timeout=20)
             url = f'http://127.0.0.1:{bili_helper_port}/render/comments?bvid={info.get("bvid","")}'
@@ -277,7 +282,7 @@ async def handle_analysis(event: Event, matcher: Matcher) -> None:
                 os.remove(comments_img_path)
     except Exception as e:
         logger.error(f"处理B站链接失败: {e}")
-        if "link" in mode and not is_info_sent and not group_id in link_blacklist:
+        if is_mode_allowed("link") and "link" in mode and not is_info_sent:
             await fallback_bili_url(bili_url, matcher)
     pass
 

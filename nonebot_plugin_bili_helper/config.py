@@ -11,6 +11,6 @@ class Config(BaseModel):
     analysis_group_whitelist: list[str] = (Field(default_factory=list, doc="B站解析群组白名单"))
     analysis_blacklist: list[str] = (Field(default_factory=list, doc="B站解析用户黑名单"))
     analysis_group_blacklist: list[str] = (Field(default_factory=list, doc="B站解析群组黑名单"))
-    analysis_link_blacklist: list[str] = (Field(default_factory=list, doc="B站解析链接群组黑名单"))
+    analysis_group_strategies: dict[str, list[str]] = (Field({}, doc="B站解析链接群组策略"))
 
 config = get_plugin_config(Config)

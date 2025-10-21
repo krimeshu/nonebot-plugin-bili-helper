@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "nonebot_plugin_bili_helper"
-version = "0.8.7"
+version = "0.8.8"
 description = "Nonebot2 plugin for bilibili sharing detail"
 authors = ["krimeshu <krimeshu@gmail.com>"]
 license = "MIT"
@@ -20,7 +20,11 @@ nonebot2 = { extras = ["fastapi", "httpx"], version = "^2.3.0" }
 nonebot-adapter-onebot = "^2.2.0"
 
 [tool.nonebot]
-plugins = ["nonebot_plugin_bili_helper"]
+adapters = [
+    { name = "OneBot V11", module_name = "nonebot.adapters.onebot.v11" }
+]
+plugins = []
+plugin_dirs = []
 
 [tool.pyright]
 pythonVersion = "3.9"

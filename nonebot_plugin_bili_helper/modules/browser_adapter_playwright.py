@@ -55,13 +55,13 @@ class BrowserManager:
             task(self._runtime_instance)
         self._instance_waiting = []
 
-    async def get_instance(self):
+    async def get_instance(self) -> Browser:
         if not self._runtime_instance:
             if not self._instance_creating:
                 await self._create_instance()
                 return await self.get_instance()
             # 创建一个 Future 来等待实例创建完成
-            future = asyncio.Future()
+            future: asyncio.Future[Browser] = asyncio.Future()
             self._instance_waiting.append(future.set_result)
             return await future
         return self._runtime_instance

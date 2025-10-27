@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "nonebot_plugin_bili_helper"
-version = "0.8.9"
+version = "0.8.10"
 description = "Nonebot2 plugin for bilibili sharing detail"
 authors = ["krimeshu <krimeshu@gmail.com>"]
 license = "MIT"

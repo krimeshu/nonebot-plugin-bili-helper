@@ -19,6 +19,11 @@ from ..config import config
 
 driver = get_driver()
 
+# 通用配置从 envConfig 读取
+envConfig = get_driver().config
+SUPERUSERS = list(envConfig.superusers)
+
+# 插件配置从 config 读取
 whitelist = config.analysis_whitelist
 group_whitelist = config.analysis_group_whitelist
 blacklist = config.analysis_blacklist
@@ -290,7 +295,7 @@ set_cookie_sniffer = on_regex(set_cookie_pattern, flags=re.DOTALL, priority=5, b
 @set_cookie_sniffer.handle()
 async def handle_set_cookie(event: Event, matcher: Matcher) -> None:
     user_id = str(event.get_user_id())
-    if not user_id in config.superusers:
+    if not user_id in SUPERUSERS:
         return
     text = event.get_plaintext().strip()
     m = re.match(set_cookie_pattern, text, flags=re.DOTALL)

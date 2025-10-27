@@ -84,16 +84,18 @@ bili_apis = BilibiliApis(
     cookie = cookie_store.get('value', ''),
 )
 
-
-async def is_allowed(event: Event) -> bool:
-    user_id = str(event.get_user_id())
-    group_id = str(
-        event.group_id
+def get_group_id(event: Event) -> str:
+    return str(
+        getattr(event, "group_id", None)
         if hasattr(event, "group_id")
-        else event.channel_id
+        else getattr(event, "channel_id", None)
         if hasattr(event, "channel_id")
         else None
     )
+
+async def is_allowed(event: Event) -> bool:
+    user_id = str(event.get_user_id())
+    group_id = get_group_id(event)
 
     if user_id in whitelist or group_id in group_whitelist:
         return True
@@ -118,14 +120,6 @@ async def handle_analysis(event: Event, matcher: Matcher) -> None:
     async def fallback_bili_url(url: str, matcher: Matcher):
         await matcher.send(f"检测到B站链接: {url}")
         matcher.stop_propagation()
-
-    group_id = str(
-        event.group_id
-        if hasattr(event, "group_id")
-        else event.channel_id
-        if hasattr(event, "channel_id")
-        else None
-    )
 
     message = event.get_message()
     bili_url = None
@@ -177,7 +171,9 @@ async def handle_analysis(event: Event, matcher: Matcher) -> None:
 
     is_info_sent = False
     try:
+        mode_str = str(mode)
         matcher.stop_propagation()
+        group_id = get_group_id(event)
         strategy = group_strategies.get(group_id, None)
         def is_mode_allowed(m: str) -> bool:
             if not strategy:
@@ -189,8 +185,9 @@ async def handle_analysis(event: Event, matcher: Matcher) -> None:
             logger.warning(f"无法从链接中提取ID: {bili_url}")
             return
         logger.debug(f"提取到的ID: {vids}")
-        info = bili_apis.video_info_api(bvid=vids.get("bv")).call().get("data", {})
-        if is_mode_allowed("detail") and "detail" in mode:
+        bvid = vids.get("bv", "") if vids else ""
+        info = bili_apis.video_info_api(bvid=bvid).call().get("data", {})
+        if is_mode_allowed("detail") and "detail" in mode_str:
             def number_readable(num: int) -> str:
                 if num >= 1_0000_0000: return f"{num / 1_0000_0000:.1f}亿"
                 elif num >= 1_0000: return f"{num / 1_0000:.1f}万"
@@ -245,20 +242,22 @@ async def handle_analysis(event: Event, matcher: Matcher) -> None:
                 if len(desc_lines) > 3:
                     desc = "\n".join(desc_lines[:3]).rstrip("...") + "..."
                 msg_seg.append(MessageSegment.text(f"\nℹ️ {desc}"))
-            await matcher.send(msg_seg)
+            await matcher.send(Message(msg_seg))
             is_info_sent = True
-        if is_mode_allowed("link") and "link" in mode:
+        if is_mode_allowed("link") and "link" in mode_str:
             bvid = info.get("bvid", "")
             new_url = f"https://b23.tv/{bvid}" if bvid else bili_url
             await matcher.send(f"解析到B站链接: {new_url}")
             is_info_sent = True
-        if is_mode_allowed("comments") and "comments" in mode:
+        if is_mode_allowed("comments") and "comments" in mode_str:
             tmp_name = f"{int(event.time)}_{event.get_session_id()}"
             # comments_html = requests.get(f"{bili_helper_host}/get-replies?url={url}", timeout=20)
             url = f'http://127.0.0.1:{bili_helper_port}/render/comments?bvid={info.get("bvid","")}'
             # 使用线程池执行同步的 requests.get，避免阻塞事件循环
             loop = asyncio.get_running_loop()
-            response = await loop.run_in_executor(None, requests.get, url, 20)
+            def request_runner(url: str):
+                return requests.get(url, timeout=20)
+            response = await loop.run_in_executor(None, request_runner, url)
             response.raise_for_status()
             result = json.loads(response.text)
             if result.get("code", -1) != 0:
@@ -286,7 +285,7 @@ async def handle_analysis(event: Event, matcher: Matcher) -> None:
                 os.remove(comments_img_path)
     except Exception as e:
         logger.error(f"处理B站链接失败: {e}")
-        if is_mode_allowed("link") and "link" in mode and not is_info_sent:
+        if is_mode_allowed("link") and "link" in mode_str and not is_info_sent:
             await fallback_bili_url(bili_url, matcher)
     pass
 

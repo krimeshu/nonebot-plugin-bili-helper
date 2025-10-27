@@ -33,8 +33,8 @@ async def test_host_async():
     port = 8078
     browser_adapter = BrowserAdapter(mode=BrowserMode.PLAYWRIGHT)
     
-    app = get_app(browser_mode=BrowserMode.PLAYWRIGHT)
-    runner = web.AppRunner(app)
+    api_web = get_app(browser_mode=BrowserMode.PLAYWRIGHT)
+    runner = web.AppRunner(api_web.app)
     await runner.setup()
     site = web.TCPSite(runner, '127.0.0.1', port)
     

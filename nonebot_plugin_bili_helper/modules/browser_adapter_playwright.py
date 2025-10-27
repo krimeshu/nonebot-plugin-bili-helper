@@ -1,6 +1,6 @@
 import asyncio
 from contextlib import asynccontextmanager
-from playwright.async_api import async_playwright, Browser, Playwright
+from playwright.async_api import async_playwright, Browser, Playwright, ViewportSize
 import sys
 from typing import Optional, List, Callable
 
@@ -71,7 +71,7 @@ browser_manager = BrowserManager()
 @asynccontextmanager
 async def get_new_page(
         device_scale_factor: float = 1.0,
-        viewport: Optional[dict] = None,
+        viewport: Optional[ViewportSize] = None,
 ):
     print('Getting new page...')
     browser = await browser_manager.get_instance()

@@ -1,21 +1,6 @@
-from typing import Tuple
+from typing import Optional, Tuple
 import requests
 import urllib.parse
-
-class ApiEnv:
-    'API 请求环境参数'
-
-    def __init__(self, ua: str, refer: str):
-        self.ua = ua
-        self.refer = refer
-
-    def get_encoder(self) -> 'ApiEncoder':
-        '获取请求参数编码器，默认不进行编码'
-        return None
-
-    def check_result(self, result: dict) -> Tuple[bool, str]:
-        '检查返回结果是否成功，以及对应的错误信息'
-        return False, str(result)
 
 class ApiEncoder:
     'API 请求参数编码器'
@@ -24,15 +9,32 @@ class ApiEncoder:
         '对请求参数进行编码，返回新的 url 和参数字典'
         return url, params
 
+class ApiEnv:
+    'API 请求环境参数'
+
+    def __init__(self, ua: Optional[str], refer: Optional[str], cookie: Optional[str]):
+        self.ua = ua or ''
+        self.refer = refer or ''
+        self.cookie = cookie or ''
+
+    def get_encoder(self) -> Optional[ApiEncoder]:
+        '获取请求参数编码器，默认不进行编码'
+        return None
+
+    def check_result(self, result: dict) -> Tuple[bool, str]:
+        '检查返回结果是否成功，以及对应的错误信息'
+        return False, str(result)
+
 class ApiInfo:
     'API 请求接口信息'
 
-    def __init__(self,
-                 url: str,
-                 params: dict,
-                 errors: dict,
-                 encoder: ApiEncoder=None,
-                 ):
+    def __init__(
+            self,
+            url: str,
+            params: dict,
+            errors: dict,
+            encoder: Optional[ApiEncoder]=None,
+        ):
         self.url = url
         self.params = params
         self.errors = errors

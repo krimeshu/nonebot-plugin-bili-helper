@@ -169,21 +169,23 @@ def get_app(
             print('- Render comments error:', e)
             return web.Response(status=500, text=str(e))
 
-    async def cors_middleware(app, handler):
+    from aiohttp.web_request import Request
+    from aiohttp.typedefs import Handler
+
+    @web.middleware
+    async def cors_middleware(request: Request, handler: Handler):
         """
         为静态资源添加 CORS 头的中间件
         """
-        async def middleware_handler(request):
-            response = await handler(request)
-            # print(f"Request path: {request.path}")
-            if request.path.startswith('/resources/font/'):
-                response.headers['Access-Control-Allow-Origin'] = '*'
-            return response
-        return middleware_handler
+        response = await handler(request)
+        # print(f"Request path: {request.path}")
+        if request.path.startswith('/resources/font/'):
+            response.headers['Access-Control-Allow-Origin'] = '*'
+        return response
 
-    app = web.Application()
-
-    app.middlewares.append(cors_middleware)
+    app = web.Application(
+        middlewares=[cors_middleware],
+    )
 
     app.router.add_static('/resources/', path=WEB_DIR, name='resource', show_index=True)
     app.router.add_get('/mock', api_mock)

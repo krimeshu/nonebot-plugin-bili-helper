@@ -1,6 +1,6 @@
 import re
 import requests
-from typing import Tuple
+from typing import Optional, Tuple, Union
 from .api_base import ApiEnv, ApiEncoder, ApiInfo, ApiInvoker
 from .bilibili_encoder import WbiEncoder
 from .bv2av import bv2av, av2bv
@@ -14,10 +14,16 @@ URL_REGEXPS = {
 class BilibiliApis(ApiEnv):
     """B 站 API 集合"""
 
-    def __init__(self, ua: str = None, refer: str = None, cookie: str = None):
-        self.ua = ua or 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3'
-        self.refer = refer or 'https://www.bilibili.com/'
-        self.cookie = cookie or ''
+    def __init__(
+            self,
+            ua: Optional[str] = None,
+            refer: Optional[str] = None,
+            cookie: Optional[str] = None,
+        ):
+        ua = ua or 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3'
+        refer = refer or 'https://www.bilibili.com/'
+        cookie = cookie or ''
+        super().__init__(ua=ua, refer=refer, cookie=cookie)
         # print('BilibiliApis initialized with cookie:', self.cookie)
 
     def set_cookie(self, cookie: str):
@@ -51,9 +57,9 @@ class BilibiliApis(ApiEnv):
         'AV 号转 BV 号'
         return av2bv(aid)
 
-    def get_url_from_text(self, text: str) -> str:
+    def get_url_from_text(self, text: str):
         '从文本中提取 BV 号或 AV 号链接'
-        url = None
+        url: Optional[str] = None
         for key, regexp in URL_REGEXPS.items():
             m = regexp.search(text)
             if not m: continue
@@ -63,7 +69,7 @@ class BilibiliApis(ApiEnv):
             break
         return url
 
-    def get_id_from_url(self, url: str) -> str:
+    def get_id_from_url(self, url: str):
         '从 URL 中提取 BV 号或 AV 号'
         matched = None
         for regexp in URL_REGEXPS.values():
@@ -105,7 +111,7 @@ class BilibiliApis(ApiEnv):
                 print(f'get_id_from_url: 无法解析短链 {url}: {e}')
         return None
 
-    def video_info_api(self, aid: int=None, bvid: str=None) -> ApiInvoker:
+    def video_info_api(self, aid: Optional[int]=None, bvid: Optional[str]=None) -> ApiInvoker:
         '获取指定 bvid 的视频信息'
         'https://github.com/SocialSisterYi/bilibili-API-collect/blob/47be3f206fc5d8a92fa81886eb507e4492e4e27a/docs/video/info.md'
         url = 'https://api.bilibili.com/x/web-interface/view'

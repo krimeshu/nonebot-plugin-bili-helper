@@ -14,8 +14,12 @@ os.makedirs(TMP_DIR, exist_ok=True)
 
 async def test_browser_adapter():
     url = 'file://' + os.path.join(ROOT_DIR, 'resources/render-v2/bilibili/comment.html?mock=1')
-    adapter = BrowserAdapter(mode=BrowserMode.PLAYWRIGHT)
-    async with adapter.get_new_page() as page:
+    adapter = BrowserAdapter(
+        mode=BrowserMode.PLAYWRIGHT,
+    )
+    async with adapter.get_new_page(
+        viewport={'width': 1280, 'height': 720},
+    ) as page:
         print('- Browser launched')
         await page.goto(url)
         print('- Page loaded')

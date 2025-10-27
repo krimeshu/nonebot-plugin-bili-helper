@@ -50,8 +50,8 @@
         <div class="info-content">
           <div class="additional-info">
             {{val.ctime}} · 
-            {{if val.location != null}}
-            <span>{{val.location}}&nbsp&nbsp&nbsp&nbsp</span>
+            {{if val.location != null && val.location.length > 0}}
+            <span>来自 {{val.location}}&nbsp&nbsp&nbsp&nbsp</span>
             {{/if}}
             {{if val.replylength > 0}}
             <span style="color: #b9b9b9; letter-spacing: 3px">{{val.replylength}}回复</span>

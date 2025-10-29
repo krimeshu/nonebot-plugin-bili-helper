@@ -36,7 +36,9 @@ class BilibiliCommentRenderer:
             template_path = os.path.join(ROOT_DIR, template.lstrip('/'))
             with open(template_path, 'r', encoding='utf-8') as f:
                 template_content = f.read()
-            template_list_html += f'<template id="{template}">\n{template_content}\n</template>\n'
+            id = json.dumps(template, ensure_ascii=False)
+            text = json.dumps(template_content, ensure_ascii=False).replace('</script>', '<\\/script>')
+            template_list_html += f'<script>\nwindow.ScriptsModule.createTemplate({id}, {text});\n</script>\n'
         html = BilibiliCommentRenderer.take_placeholders(html, 'template_list', template_list_html)
 
         # 插入脚本列表

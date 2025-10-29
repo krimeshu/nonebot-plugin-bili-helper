@@ -9,14 +9,18 @@ export function cleanupBeforeRender() {
   });
 }
 
-async function loadTemplate(src = '') {
-  const text = await fetch(src).then((res) => res.text());
+async function createTemplate(id = '', content = '') {
   const script = document.createElement('script');
-  script.id = `${origin}${src}`;
+  script.id = id;
   script.type = 'text/html';
-  script.innerHTML = text;
+  script.innerHTML = content;
   document.body.appendChild(script);
   renderTemplates.push(script);
+}
+
+async function loadTemplate(src = '') {
+  const text = await fetch(src).then((res) => res.text());
+  createTemplate(`${origin}${src}`, text);
 }
 
 export async function loadTemplates(list = [], cb = null) {

@@ -1,7 +1,7 @@
-from typing import Tuple
+import aiohttp
+from typing import Optional, Tuple
 import urllib.parse
 import time
-import requests
 from functools import reduce
 from hashlib import md5
 
@@ -21,14 +21,14 @@ class WbiEncoder(ApiEncoder):
         self.ua = ua
         self.refer = refer
         self.cookie = cookie
-        self.keys = self.get_wbi_keys()
+        self.key_cache: Optional[Tuple[str, str]] = None
 
     def set_cookie(self, cookie: str):
         self.cookie = cookie
-        self.keys = self.get_wbi_keys()
+        self.key_cache = None
 
-    def encode(self, url: str, params: dict) -> Tuple[str, dict]:
-        new_params = self.enc_wbi(params)
+    async def encode(self, url: str, params: dict) -> Tuple[str, dict]:
+        new_params = await self.enc_wbi(params)
         return url, new_params
 
     @staticmethod
@@ -36,9 +36,9 @@ class WbiEncoder(ApiEncoder):
         '对 imgKey 和 subKey 进行字符顺序打乱编码'
         return reduce(lambda s, i: s + orig[i], WbiEncoder.mixin_key_enc_tab, '')[:32]
 
-    def enc_wbi(self, params: dict):
+    async def enc_wbi(self, params: dict):
         '为请求参数进行 wbi 签名'
-        img_key, sub_key = self.keys
+        img_key, sub_key = await self.get_wbi_keys()
         mixin_key = WbiEncoder.get_mixin_key(img_key + sub_key)
         curr_time = round(time.time())
         params['wts'] = curr_time                                   # 添加 wts 字段
@@ -54,18 +54,22 @@ class WbiEncoder(ApiEncoder):
         params['w_rid'] = wbi_sign
         return params
 
-    def get_wbi_keys(self) -> Tuple[str, str]:
-        '获取最新的 img_key 和 sub_key'
+    async def get_wbi_keys(self) -> Tuple[str, str]:
+        '获取 img_key 和 sub_key'
+        if self.key_cache is not None:
+            return self.key_cache
         headers = {
             'User-Agent': self.ua,
             'Referer': self.refer,
             'Cookie': self.cookie,
         }
-        resp = requests.get('https://api.bilibili.com/x/web-interface/nav', headers=headers)
-        resp.raise_for_status()
-        json_content = resp.json()
-        img_url: str = json_content['data']['wbi_img']['img_url']
+        async with aiohttp.ClientSession() as session:
+            async with session.get('https://api.bilibili.com/x/web-interface/nav', headers=headers) as resp:
+                resp.raise_for_status()
+                json_content = await resp.json()
+                img_url: str = json_content['data']['wbi_img']['img_url']
         sub_url: str = json_content['data']['wbi_img']['sub_url']
         img_key = img_url.rsplit('/', 1)[1].split('.')[0]
         sub_key = sub_url.rsplit('/', 1)[1].split('.')[0]
-        return img_key, sub_key
+        self.key_cache = (img_key, sub_key)
+        return self.key_cache

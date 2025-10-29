@@ -92,7 +92,7 @@ def get_app(
             return web.json_response({'error': 'Must provide either BVID or AID'}, status=400)
         try:
             api_invoker = bilibili_apis.video_info_api(aid=aid, bvid=bvid)
-            result = api_invoker.call()
+            result = await api_invoker.call()
             return web.json_response(result)
         except Exception as e:
             return web.json_response({'error': str(e)}, status=500)
@@ -120,7 +120,7 @@ def get_app(
         type = int(type_str)
         try:
             api_invoker = bilibili_apis.get_comments_api(oid=oid, type=type, next_offset=next_offset)
-            result = api_invoker.call()
+            result = await api_invoker.call()
             return web.json_response(result)
         except Exception as e:
             return web.json_response({'error': str(e)}, status=500)

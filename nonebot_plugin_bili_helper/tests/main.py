@@ -1,8 +1,8 @@
+import aiohttp
 import asyncio
 import json
 import os
 from pathlib import Path
-import requests
 import sys
 
 from aiohttp import web
@@ -29,7 +29,7 @@ class Counter:
         self.count += 1
         return f'{self.name}_{self.count}'
 
-async def test_host_async():
+async def test_host():
     port = 8078
     browser_adapter = BrowserAdapter(mode=BrowserMode.PLAYWRIGHT)
     
@@ -47,14 +47,12 @@ async def test_host_async():
         print(f'- 测试渲染评论: {url}')
         
         loop = asyncio.get_running_loop()
-        response = await loop.run_in_executor(
-            None, 
-            lambda: requests.get(url, timeout=60)
-        )
-        response.raise_for_status()
-        result = json.loads(response.text)
-        code = result.get('code', -1)
-        msg = result.get('message', '')
+        async with aiohttp.ClientSession() as session:
+            async with session.get(url, timeout=60) as response:
+                response.raise_for_status()
+                result = await response.json()
+                code = result.get('code', -1)
+                msg = result.get('message', '')
         if code != 0:
             print(f'- Render comments error: {code} {msg}')
             return
@@ -84,10 +82,7 @@ async def test_host_async():
         await runner.cleanup()
         print('Bilibili 助手服务已停止')
 
-def test_host():
-    asyncio.run(test_host_async())
-
-def test_api():
+async def test_api():
     cookie_json_path = Path(ROOT_DIR) / '../../data' / 'bili_helper_cookie.json'
     cookie_value = ''
     if cookie_json_path.exists():
@@ -103,7 +98,7 @@ def test_api():
     api = BilibiliApis(
         cookie=cookie_value,
     )
-    response = api.get_comments_api(
+    response = await api.get_comments_api(
         oid='115256957471455',
         type=1,
         next_offset='',
@@ -115,9 +110,9 @@ def test_api():
 
 # === 主函数入口 ===
 
-def main():
-    test_api()
-    # test_host()
+async def main():
+    await test_api()
+    # await test_host()
 
 if __name__ == '__main__':
-    main()
+    asyncio.run(main())

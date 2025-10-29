@@ -1,5 +1,5 @@
+import aiohttp
 import re
-import requests
 from typing import Optional, Tuple, Union
 from .api_base import ApiEnv, ApiEncoder, ApiInfo, ApiInvoker
 from .bilibili_encoder import WbiEncoder
@@ -69,7 +69,7 @@ class BilibiliApis(ApiEnv):
             break
         return url
 
-    def get_id_from_url(self, url: str):
+    async def get_id_from_url(self, url: str):
         '从 URL 中提取 BV 号或 AV 号'
         matched = None
         for regexp in URL_REGEXPS.values():
@@ -103,10 +103,11 @@ class BilibiliApis(ApiEnv):
         elif re.match(r'^https://b23.tv/', url):
             # 短链，无法直接判断，根据请求后重定向的 location 来判断
             try:
-                response = requests.head(url, allow_redirects=True, timeout=10)
-                final_url = response.url
+                async with aiohttp.ClientSession() as session:
+                    async with session.head(url, allow_redirects=True, timeout=10) as resp:
+                        final_url = str(resp.url)
                 # print(f'get_id_from_url: 短链重定向到 {final_url}')
-                return self.get_id_from_url(final_url)
+                return await self.get_id_from_url(final_url)
             except Exception as e:
                 print(f'get_id_from_url: 无法解析短链 {url}: {e}')
         return None

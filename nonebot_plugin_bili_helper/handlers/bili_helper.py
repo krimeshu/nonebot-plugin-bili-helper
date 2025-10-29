@@ -1,10 +1,10 @@
+import aiohttp
 import asyncio
 import json
 import os
 import re
-import requests
 import shutil
-# import threading
+
 from typing import Literal
 from nonebot import get_driver, logger, on_message, on_regex
 from nonebot_plugin_htmlrender import get_new_page
@@ -180,13 +180,14 @@ async def handle_analysis(event: Event, matcher: Matcher) -> None:
                 return True
             return m in strategy
         # url = quote(bili_url)
-        vids = bili_apis.get_id_from_url(bili_url)
+        vids = await bili_apis.get_id_from_url(bili_url)
         if not vids:
             logger.warning(f"无法从链接中提取ID: {bili_url}")
             return
         logger.debug(f"提取到的ID: {vids}")
         bvid = vids.get("bv", "") if vids else ""
-        info = bili_apis.video_info_api(bvid=bvid).call().get("data", {})
+        info = await bili_apis.video_info_api(bvid=bvid).call()
+        info_data = info.get("data", {})
         if is_mode_allowed("detail") and "detail" in mode_str:
             def number_readable(num: int) -> str:
                 if num >= 1_0000_0000: return f"{num / 1_0000_0000:.1f}亿"
@@ -206,18 +207,18 @@ async def handle_analysis(event: Event, matcher: Matcher) -> None:
                     seconds = seconds % 60
                     return f"{hours}:{minutes:02d}:{seconds:02d}"
 
-            title = info.get("title", "未知标题")
-            cover_url = info.get("pic", "")
-            artist = info.get("owner", {}).get("name", "未知作者")
-            type_name = info.get("tname", "未知分区")
-            stat = info.get("stat", {})
+            title = info_data.get("title", "未知标题")
+            cover_url = info_data.get("pic", "")
+            artist = info_data.get("owner", {}).get("name", "未知作者")
+            type_name = info_data.get("tname", "未知分区")
+            stat = info_data.get("stat", {})
             play_count = number_readable(stat.get("view", 0))
             # danmaku_count = number_readable(stat.get("danmaku", 0))
             like_count = number_readable(stat.get("like", 0))
             coin_count = number_readable(stat.get("coin", 0))
             # favorite_count = number_readable(stat.get("favorite", 0))
-            duration = format_duration(info.get("duration", 0))
-            desc = info.get("desc", "")
+            duration = format_duration(info_data.get("duration", 0))
+            desc = info_data.get("desc", "")
 
             msg_seg = [
                 MessageSegment.text(f'{title}\n')
@@ -225,8 +226,10 @@ async def handle_analysis(event: Event, matcher: Matcher) -> None:
 
             try:
                 if cover_url:
-                    cover_img = requests.get(cover_url, timeout=10)
-                    msg_seg.append(MessageSegment.image(cover_img.content))
+                    async with aiohttp.ClientSession() as session:
+                        async with session.get(cover_url, timeout=10) as resp:
+                            cover_img = await resp.read()
+                            msg_seg.append(MessageSegment.image(cover_img))
             except Exception as e:
                 logger.warning(f"获取封面失败: {e}")
 
@@ -245,21 +248,18 @@ async def handle_analysis(event: Event, matcher: Matcher) -> None:
             await matcher.send(Message(msg_seg))
             is_info_sent = True
         if is_mode_allowed("link") and "link" in mode_str:
-            bvid = info.get("bvid", "")
+            bvid = info_data.get("bvid", "")
             new_url = f"https://b23.tv/{bvid}" if bvid else bili_url
             await matcher.send(f"解析到B站链接: {new_url}")
             is_info_sent = True
         if is_mode_allowed("comments") and "comments" in mode_str:
             tmp_name = f"{int(event.time)}_{event.get_session_id()}"
-            # comments_html = requests.get(f"{bili_helper_host}/get-replies?url={url}", timeout=20)
-            url = f'http://127.0.0.1:{bili_helper_port}/render/comments?bvid={info.get("bvid","")}'
-            # 使用线程池执行同步的 requests.get，避免阻塞事件循环
-            loop = asyncio.get_running_loop()
-            def request_runner(url: str):
-                return requests.get(url, timeout=20)
-            response = await loop.run_in_executor(None, request_runner, url)
-            response.raise_for_status()
-            result = json.loads(response.text)
+            url = f'http://127.0.0.1:{bili_helper_port}/render/comments?bvid={info_data.get("bvid","")}'
+            result = None
+            async with aiohttp.ClientSession() as session:
+                async with session.get(url, timeout=20) as resp:
+                    resp_text = await resp.text()
+                    result = json.loads(resp_text)
             if result.get("code", -1) != 0:
                 raise Exception(f"获取评论失败: {result.get('message', '未知错误')}")
             data = result.get("data", {})

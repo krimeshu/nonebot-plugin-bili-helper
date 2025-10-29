@@ -1,11 +1,11 @@
+import aiohttp
 from typing import Optional, Tuple
-import requests
 import urllib.parse
 
 class ApiEncoder:
     'API 请求参数编码器'
 
-    def encode(self, url: str, params: dict) -> Tuple[str, dict]:
+    async def encode(self, url: str, params: dict) -> Tuple[str, dict]:
         '对请求参数进行编码，返回新的 url 和参数字典'
         return url, params
 
@@ -47,7 +47,7 @@ class ApiInvoker:
         self.env = env
         self.api_info = api_info
 
-    def call(self, headers: dict = {}):
+    async def call(self, headers: dict = {}):
         ua = self.env.ua
         refer = self.env.refer
         cookie = self.env.cookie
@@ -66,15 +66,16 @@ class ApiInvoker:
         final_params = params
 
         if encoder:
-            url, final_params = encoder.encode(url, final_params)
+            url, final_params = await encoder.encode(url, final_params)
 
         query = urllib.parse.urlencode(final_params)
         full_url = f'{url}?{query}'
         # print('Request URL:', full_url)
         # print('Request Headers:', headers)
-        resp = requests.get(full_url, headers=headers)
-        resp.raise_for_status()
-        json_content = resp.json()
+        async with aiohttp.ClientSession() as session:
+            async with session.get(full_url, headers=headers) as resp:
+                resp.raise_for_status()
+                json_content = await resp.json()
         # print('Response JSON:', json_content)
         [res_code, res_msg] = self.env.check_result(json_content)
         error_msg = errors.get(str(res_code), res_msg or '未知错误')

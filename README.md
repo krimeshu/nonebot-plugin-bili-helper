@@ -6,7 +6,7 @@
 
 # nonebot-plugin-bili-helper
 
-_✨ NoneBot 插件简单描述 ✨_
+_✨ 一个自动解析群聊内的 B 站分享信息、热评截图的插件 ✨_
 
 
 <a href="./LICENSE">
@@ -19,50 +19,23 @@ _✨ NoneBot 插件简单描述 ✨_
 
 </div>
 
-这是一个 nonebot2 插件项目，支持对群聊内分享 B 站视频进行相关信息的解析与提取。
-
 > 评论模板来自: [https://github.com/ikenxuan/kkkkkk-10086](https://github.com/ikenxuan/kkkkkk-10086)
 
 <details open>
-<summary>折叠事项</summary>
+<summary>提前声明</summary>
 
 1. 本插件并不提供视频下载能力（个人觉得群聊里出现大量下载的视频片段挺烦的，经常触发自动下载还占用手机和电脑的空间）。
 2. 只适配和测试了 onebot v11 适配器的场景，其他环境未做处理，不确保可用性。
 
 </details>
 
-> [!NOTE]
-> 模板库中自带了一个发布工作流, 你可以使用此工作流自动发布你的插件到 pypi
-
-<details>
-<summary>配置发布工作流</summary>
-
-1. 前往 https://pypi.org/manage/account/#api-tokens 并创建一个新的 API 令牌。创建成功后不要关闭页面，不然你将无法再次查看此令牌。
-2. 在单独的浏览器选项卡或窗口中，打开 [Actions secrets and variables](./settings/secrets/actions) 页面。你也可以在 Settings - Secrets and variables - Actions 中找到此页面。
-3. 点击 New repository secret 按钮，创建一个名为 `PYPI_API_TOKEN` 的新令牌，并从第一步复制粘贴令牌。
-
-</details>
-
-> [!IMPORTANT]
-> 这个发布工作流需要 pyproject.toml 文件, 并且只支持 [PEP 621](https://peps.python.org/pep-0621/) 标准的 pyproject.toml 文件
-
-<details>
-<summary>触发发布工作流</summary>
-从本地推送任意 tag 即可触发。
-
-创建 tag:
-
-    git tag <tag_name>
-
-推送本地所有 tag:
-
-    git push origin --tags
-
-</details>
-
 ## 📖 介绍
 
-这里是插件的详细介绍部分
+这是一个 nonebot2 插件项目，支持对群聊内分享 B 站视频进行相关信息的解析与提取。
+
+1. 对于群聊里出现的 B 站小程序、卡片分享，提取对应链接，方便 PC 端打开；
+2. 对于只有视频链接的情况，补充视频封面、详情等信息。
+3. 评论区热评截图预览，可供判断视频质量（截图基于 nonebot-plugin-htmlrender 插件）。
 
 ## 💿 安装
 

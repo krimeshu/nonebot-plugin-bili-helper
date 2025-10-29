@@ -17,4 +17,5 @@ __plugin_meta__ = PluginMetadata(
     config=Config,
     homepage="https://github.com/krimeshu/nonebot-plugin-bili-helper",
     type="application",
+    supported_adapters={"~onebot.v11"},
 )

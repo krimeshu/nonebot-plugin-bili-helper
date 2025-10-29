@@ -116,8 +116,6 @@ _✨ NoneBot 插件简单描述 ✨_
 | analysis_blacklist | 否 | 无 | 触发人黑名单 |
 | analysis_group_blacklist | 否 | 无 | 目标群组黑名单 |
 | analysis_group_strategies | 否 | 无 | 群组策略（格式为 `dict[str, list]`，其中 `list` 为 `'detail', 'link', 'comments'` 组成的数组。如配置 `{ "123": ["comments"] }` 说明对群组 123 仅做评论解析） |
-| bili_helper_tmp_dir | 否 | `./tmp/bili_helper` | 临时文件保存位置 |
-| bili_helper_cookie_path | 否 | `./data/bili_helper_cookie.json` | Cookie保存位置 |
 
 ## 🎉 使用
 

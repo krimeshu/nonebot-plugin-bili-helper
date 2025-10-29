@@ -6,12 +6,6 @@ from nonebot import get_plugin_config
 class Config(BaseModel):
     """Plugin Config Here"""
 
-    bili_helper_tmp_dir: str = Field("./tmp/bili_helper")
-    """B站解析临时文件存储位置"""
-
-    bili_helper_cookie_path: str = Field("./data/bili_helper_cookie.json")
-    """B站Cookie存储位置"""
-
     analysis_whitelist: list[str] = Field(default_factory=list)
     """B站解析用户白名单"""
 

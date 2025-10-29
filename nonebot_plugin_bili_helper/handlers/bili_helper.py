@@ -3,11 +3,11 @@ import asyncio
 import json
 import os
 import re
-import shutil
 
 from typing import Literal
 from nonebot import get_driver, logger, on_message, on_regex
 from nonebot_plugin_htmlrender import get_new_page
+from nonebot_plugin_localstore import get_cache_dir, get_config_file
 from nonebot.adapters.onebot.v11 import Event, Message, MessageSegment
 from nonebot.matcher import Matcher
 from aiohttp import web
@@ -30,21 +30,18 @@ blacklist = config.analysis_blacklist
 group_blacklist = config.analysis_group_blacklist
 group_strategies = config.analysis_group_strategies
 
-bili_helper_tmp_dir= config.bili_helper_tmp_dir
+bili_helper_tmp_dir= get_cache_dir("bili_helper")
 
-if os.path.exists(bili_helper_tmp_dir):
-  shutil.rmtree(bili_helper_tmp_dir)
-os.makedirs(bili_helper_tmp_dir, exist_ok=True)
-
-cookie_store_path = config.bili_helper_cookie_path
+cookie_store_name = "cookie_store.json"
+cookie_store_path = get_config_file("bili_helper", cookie_store_name)
 def write_cookie(config: dict):
     try:
         with open(cookie_store_path, "w") as f:
             json.dump(config, f, ensure_ascii=False, indent=4)
-        logger.info('配置 {} 写入成功'.format(cookie_store_path))
+        logger.info('配置 {} 写入成功'.format(cookie_store_name))
         return True
     except Exception as e:
-        logger.info('配置 {} 写入失败: {}'.format(cookie_store_path, e))
+        logger.info('配置 {} 写入失败: {}'.format(cookie_store_name, e))
         return False
     
 def read_cookie():
@@ -52,9 +49,10 @@ def read_cookie():
     try:
         with open(cookie_store_path, "r") as f:
             config = json.load(f)
-        logger.info('配置 {} 读取成功'.format(cookie_store_path))
+        logger.info('配置 {} 读取成功'.format(cookie_store_name))
     except Exception as e:
-        logger.info('配置 {} 为空或格式有误: {}\n准备创建默认配置'.format(cookie_store_path, e))
+        logger.info('配置 {} 为空或格式有误: {}'.format(cookie_store_name, e))
+        logger.info('准备创建默认配置...')
         write_cookie(config)
     return config
 
@@ -281,6 +279,7 @@ async def handle_analysis(event: Event, matcher: Matcher) -> None:
                 comments_img = open(comments_img_path, "rb").read()
                 meg = Message(MessageSegment.image(comments_img))
                 await matcher.send(meg)
+                # 清理临时文件
                 os.remove(comments_path)
                 os.remove(comments_img_path)
     except Exception as e:

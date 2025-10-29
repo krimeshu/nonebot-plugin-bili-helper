@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "nonebot_plugin_bili_helper"
-version = "0.8.11"
+version = "0.8.12"
 description = "Nonebot2 plugin for bilibili sharing detail"
 authors = ["krimeshu <krimeshu@gmail.com>"]
 license = "MIT"
@@ -9,11 +9,12 @@ homepage = "https://github.com/krimeshu/nonebot-plugin-bili-helper"
 repository = "https://github.com/krimeshu/nonebot-plugin-bili-helper"
 
 [tool.poetry.dependencies]
+aiohttp = "^3.12.15"
 python = "^3.9"
 nonebot2 = "^2.3.0"
 nonebot-adapter-onebot = "^2.0.0"
-aiohttp = "^3.12.15"
-nonebot-plugin-htmlrender = ">=0.2.0"
+nonebot-plugin-htmlrender = "^0.2.0"
+nonebot-plugin-localstore = "^0.7.4"
 
 [tool.poetry.group.dev.dependencies]
 nonebot2 = { extras = ["fastapi", "httpx"], version = "^2.3.0" }

@@ -38,7 +38,7 @@ class BilibiliCommentRenderer:
                 template_content = f.read()
             id = json.dumps(template, ensure_ascii=False)
             text = json.dumps(template_content, ensure_ascii=False).replace('</script>', '<\\/script>')
-            template_list_html += f'<script>\nwindow.ScriptsModule.createTemplate({id}, {text});\n</script>\n'
+            template_list_html += f'<script>\nwindow.ScriptsModule.createScript({{ id: {id}, content: {text} }});\n</script>\n'
         html = BilibiliCommentRenderer.take_placeholders(html, 'template_list', template_list_html)
 
         # 插入脚本列表

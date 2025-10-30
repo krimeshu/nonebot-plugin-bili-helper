@@ -9,7 +9,7 @@
 <body>
   <script src="../../libs/template-web.js"></script>
   <script type="module">
-    import { cleanupBeforeRender, loadTemplates, cleanupAfterRender } from '../@libs/scripts.js';
+    import { loadTemplates } from '../@libs/scripts.js';
     import { Renderer } from '../@libs/renderer.js';
     import { numberReadable, bilibiliReplies } from '../@formatters/bilibili.js';
 
@@ -32,7 +32,6 @@
       async prepare() {
         if (await this.isPrepared) return;
         this.isPrepared = new Promise((resolve) => {
-          cleanupBeforeRender();
           const timeStart = performance.now();
           console.log('Loading templates...');
           return loadTemplates(this.templateList, () => {
@@ -97,34 +96,30 @@
             // Array.from(doc.head.children).forEach(el => document.head.appendChild(el));
             Array.from(doc.body.children).forEach(el => document.body.appendChild(el));
           } else {
-            this.createScript('rendered-html', 'html', html);
-            this.createScript('rendered-result', 'json', {
+            this.createResult('rendered-html', 'html', html);
+            this.createResult('rendered-result', 'json', {
               code: 0,
               message: '成功',
             });
           }
           console.log('Page rendered:');
           console.log(html);
-          if (!this.isMock) {
-            cleanupAfterRender();
-          }
         } catch (ex) {
           console.error('Error rendering page:', ex);
-          this.createScript('render-result', 'json', {
+          this.createResult('rendered-result', 'json', {
             code: 1,
             message: ex.message,
           });
         }
       }
 
-      createScript(id, type, data) {
-        const pre = document.createElement('pre');
+      createResult(id, type, data) {
         const box = document.createElement('code');
         box.id = id;
         box.setAttribute('data-type', type);
+        box.style = 'white-space: pre-wrap;';
         box.textContent = typeof data === 'string' ? data : JSON.stringify(data, null, 2);
-        pre.appendChild(box);
-        document.body.appendChild(pre);
+        document.body.appendChild(box);
       }
     }
 

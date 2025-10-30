@@ -13,8 +13,7 @@ from nonebot.matcher import Matcher
 from aiohttp import web
 
 from ..modules.bilibili_apis import BilibiliApis
-from ..modules.bilibili_api_host import get_app
-from ..modules.browser_adapter import BrowserMode
+from ..renderer.bilibili_comment import BilibiliCommentRenderer
 from ..config import config
 
 driver = get_driver()
@@ -58,25 +57,6 @@ def read_cookie():
 
 cookie_store = read_cookie()
 # print('Loaded cookie:', cookie_store)
-
-# 启动API服务
-bili_helper_port = 9528
-api_web = get_app(
-    BrowserMode.NONEBOT_HTMLRENDER,
-    cookie = cookie_store.get('value', ''),
-)
-api_web_runner = web.AppRunner(api_web.app)
-
-@driver.on_startup
-async def start_bili_helper_server():
-    await api_web_runner.setup()
-    site = web.TCPSite(api_web_runner, '127.0.0.1', bili_helper_port)
-    await site.start()
-    logger.info(f'BiliBili Helper API started at http://127.0.0.1:{bili_helper_port}')
-
-@driver.on_shutdown
-async def shutdown_bili_helper_server():
-    await api_web_runner.cleanup()
 
 bili_apis = BilibiliApis(
     cookie = cookie_store.get('value', ''),
@@ -252,17 +232,9 @@ async def handle_analysis(event: Event, matcher: Matcher) -> None:
             is_info_sent = True
         if is_mode_allowed("comments") and "comments" in mode_str:
             tmp_name = f"{int(event.time)}_{event.get_session_id()}"
-            url = f'http://127.0.0.1:{bili_helper_port}/render/comments?bvid={info_data.get("bvid","")}'
-            result = None
-            async with aiohttp.ClientSession() as session:
-                async with session.get(url, timeout=20) as resp:
-                    resp_text = await resp.text()
-                    result = json.loads(resp_text)
-            if result.get("code", -1) != 0:
-                raise Exception(f"获取评论失败: {result.get('message', '未知错误')}")
-            data = result.get("data", {})
-
-            comments_html = data.get("html", "")
+            oid = str(info_data.get("aid", ""))
+            comments = await bili_apis.get_comments_api(oid=oid, type=1, next_offset="").call()
+            comments_html = BilibiliCommentRenderer.render_html(info, comments)
             comments_path = os.path.join(bili_helper_tmp_dir, f"{tmp_name}.html")
             with open(comments_path, "w", encoding="utf-8") as f:
                 f.write(comments_html)
@@ -306,5 +278,4 @@ async def handle_set_cookie(event: Event, matcher: Matcher) -> None:
     cookie_store['value'] = cookie_value
     write_cookie(cookie_store)
     bili_apis.set_cookie(cookie_value)
-    api_web.set_cookie(cookie_value)
     await matcher.send("B站Cookie已更新")

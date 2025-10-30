@@ -1,6 +1,9 @@
 {
   window.JsonPModule = {};
-  module = { exports: window.JsonPModule };
+  const exports = window.JsonPModule;
+
+  const module = { exports };
+  const exportAs = o => Object.assign(module.exports, o);
 
   class JsonPBusyLock {
     #busy = false
@@ -42,7 +45,8 @@
   };
   jsonPCallback.bind(window);
 
-  module.exports.fetchJsonP = async function fetchJsonP(src = '') {
+  exportAs({ fetchJsonP });
+  async function fetchJsonP(src = '') {
     await jsonPBusyLock.lock();
     return new Promise((resolve, reject) => {
       jsonPCallback.register(resolve);

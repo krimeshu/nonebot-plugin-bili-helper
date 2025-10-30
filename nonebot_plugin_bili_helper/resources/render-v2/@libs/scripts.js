@@ -1,6 +1,8 @@
 {
   window.ScriptsModule = {};
-  const module = { exports: window.ScriptsModule };
+  const exports = window.ScriptsModule;
+
+  const module = { exports };
   const exportAs = o => Object.assign(module.exports, o);
 
   exportAs({ createScript });

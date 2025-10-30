@@ -1,6 +1,9 @@
 {
   window.RendererModule = {};
-  module = { exports: window.RendererModule };
+  const exports = window.RendererModule;
+
+  const module = { exports };
+  const exportAs = o => Object.assign(module.exports, o);
 
   const { template } = window;
 
@@ -34,7 +37,7 @@
     },
   };
 
-  module.exports.Renderer = class Renderer {
+  exports.Renderer = class Renderer {
     platform;
     saveId;
     templatePath = '';

@@ -1,8 +1,12 @@
 {
   window.FormatterBilibili = {};
-  module = { exports: window.FormatterBilibili };
+  const exports = window.FormatterBilibili;
 
-  module.exports.numberReadable = function numberReadable(num = 0, onNull = '??') {
+  const module = { exports };
+  const exportAs = o => Object.assign(module.exports, o);
+
+  exportAs({ numberReadable });
+  function numberReadable(num = 0, onNull = '??') {
     if (num > 10000) {
       return (num / 10000).toFixed(1) + '万'
     } else {
@@ -10,6 +14,7 @@
     }
   }
 
+  exportAs({ bilibiliReplies });
   /**
    * 处理B站评论数据，提取并格式化评论信息
    * @param {Object} commentsData - 评论数据对象
@@ -20,7 +25,7 @@
    * @param {'dark' | 'light'} options.theme - 主题风格，默认为 'light'
    * @returns {Array|null} 处理后的评论数组，如果返回404则返回null
    */
-  module.exports.bilibiliReplies = function bilibiliReplies(commentsData, options = {}) {
+  function bilibiliReplies(commentsData, options = {}) {
     const theme = options.theme || 'light'
     if (!commentsData) return []
     let jsonArray = []

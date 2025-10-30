@@ -30,7 +30,7 @@ export async function createScript({
 
 export async function loadTemplate(src = '') {
   const text = await fetch(src).then((res) => res.text());
-  createScript({ id: `${src}`, type: 'text/html', content: text });
+  createScript({ id: `${origin}${src}`, type: 'text/html', content: text });
 }
 
 export async function loadTemplates(list = [], cb = null) {
